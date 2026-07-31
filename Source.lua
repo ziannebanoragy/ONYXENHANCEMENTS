@@ -204,7 +204,7 @@ do
 		return success, errorMessage
 	end
 
-	for AssetName, _ in CustomImageManagerAssets do
+	for AssetName, _ in pairs(CustomImageManagerAssets) do
 		CustomImageManager.DownloadAsset(AssetName)
 	end
 end
@@ -915,7 +915,7 @@ function Library:Unload()
         Library:SafeCallback(UnloadCallback)
     end
 
-    for _, Tooltip in Tooltips do
+    for _, Tooltip in pairs(Tooltips) do
         Library:SafeCallback(Tooltip.Destroy, Tooltip)
     end
 
@@ -3610,7 +3610,7 @@ do
 
             if input.UserInputType == Enum.UserInputType.MouseWheel then
                 local ZoomAmount = input.Position.Z * 2;
-                Viewport.Camera.CFrame += Viewport.Camera.CFrame.LookVector * ZoomAmount;
+                Viewport.Camera.CFrame = Viewport.Camera.CFrame + Viewport.Camera.CFrame.LookVector * ZoomAmount;
             end;
         end);
 
@@ -3639,7 +3639,7 @@ do
                 local currentDist = (touchPositions[1] - touchPositions[2]).Magnitude;
                 local delta = (currentDist - LastPinchDist) * 0.1;
                 LastPinchDist = currentDist;
-                Viewport.Camera.CFrame += Viewport.Camera.CFrame.LookVector * delta;
+                Viewport.Camera.CFrame = Viewport.Camera.CFrame + Viewport.Camera.CFrame.LookVector * delta;
             elseif state == Enum.UserInputState.End or state == Enum.UserInputState.Cancel then
                 Pinching = false;
             end;
