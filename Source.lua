@@ -627,9 +627,9 @@ function Library:MakeDraggable(Instance, Cutoff, IsWindow)
                         Wireframe:Destroy()
                         Wireframe = nil
                     end
-                end
-            end)
-        end
+            end
+        end))
+    end
     end)
 end;
 
@@ -5259,7 +5259,7 @@ if InputService.TouchEnabled then
                     end
                 end)
             end
-        end)
+        end))
 
         Library:GiveSignal(InputService.InputChanged:Connect(function(input)
             if input == dragInput and dragging then
@@ -5274,7 +5274,7 @@ if InputService.TouchEnabled then
                     )
                 end
             end
-        end)
+        end))
     end
 
     BindMobileButtonAction(ToggleBtn, ToggleOuter, function()
