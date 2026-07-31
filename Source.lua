@@ -1,6 +1,10 @@
-local cloneref = (cloneref or clonereference or function(instance: any)
+local cloneref = (cloneref or clonereference or function(instance)
 	return instance
 end)
+
+local function ternary(cond, a, b)
+	if cond then return a else return b end
+end
 local InputService = cloneref(game:GetService("UserInputService"))
 local TextService = cloneref(game:GetService("TextService"))
 local CoreGui = cloneref(game:GetService("CoreGui"))
@@ -31,11 +35,11 @@ end
 
 local assert = function(condition, errorMessage)
 	if not condition then
-		error(if errorMessage then errorMessage else "assert failed", 3)
+		error(ternary(errorMessage, errorMessage, "assert failed"), 3)
 	end
 end
 
-local function SafeParentUI(Instance: Instance, Parent: Instance | () -> Instance)
+local function SafeParentUI(Instance, Parent)
 	local success, _error = pcall(function()
 		if not Parent then
 			Parent = CoreGui
@@ -56,7 +60,7 @@ local function SafeParentUI(Instance: Instance, Parent: Instance | () -> Instanc
 	end
 end
 
-local function ParentUI(UI: Instance, SkipHiddenUI: boolean?)
+local function ParentUI(UI, SkipHiddenUI)
 	if SkipHiddenUI then
 		SafeParentUI(UI, CoreGui)
 		return
@@ -134,7 +138,7 @@ local CustomImageManagerAssets = {
 	}
 }
 do
-	local function RecursiveCreatePath(Path: string, IsFile: boolean?)
+	local function RecursiveCreatePath(Path, IsFile)
 		if not isfolder or not makefolder then
 			return
 		end
@@ -152,7 +156,7 @@ do
 		return TraversedPath
 	end
 
-	function CustomImageManager.AddAsset(AssetName: string, RobloxAssetId: number, URL: string, ForceRedownload: boolean?)
+	function CustomImageManager.AddAsset(AssetName, RobloxAssetId, URL, ForceRedownload)
 		if CustomImageManagerAssets[AssetName] ~= nil then
 			error(string.format("Asset %q already exists", AssetName))
 		end
@@ -166,7 +170,7 @@ do
 		CustomImageManager.DownloadAsset(AssetName, ForceRedownload)
 	end
 
-	function CustomImageManager.GetAsset(AssetName: string)
+	function CustomImageManager.GetAsset(AssetName)
 		if not CustomImageManagerAssets[AssetName] then
 			return nil
 		end
@@ -185,7 +189,7 @@ do
 		return AssetID
 	end
 
-	function CustomImageManager.DownloadAsset(AssetName: string, ForceRedownload: boolean?)
+	function CustomImageManager.DownloadAsset(AssetName, ForceRedownload)
 		if not getcustomasset or not writefile or not isfile then
 			return false, "missing functions"
 		end
@@ -298,7 +302,7 @@ else
     Library.IsMobile = (Library.DevicePlatform == Enum.Platform.Android or Library.DevicePlatform == Enum.Platform.IOS)
 end
 
-Library.MinSize = if Library.IsMobile then Vector2.new(550, 200) else Vector2.new(550, 300)
+Library.MinSize = ternary(Library.IsMobile, Vector2.new(550, 200), Vector2.new(550, 300))
 
 --// DPI Functions \\--
 local function ApplyDPIScale(Position)
@@ -378,31 +382,18 @@ end
 end))
 
 --// Icon Module \\--
-type Icon = {
-    Url: string,
-    Id: number,
-    IconName: string,
-    ImageRectOffset: Vector2,
-    ImageRectSize: Vector2,
-}
-
-type IconModule = {
-    Icons: { string },
-    GetAsset: (Name: string) -> Icon?,
-}
-
 local FetchIcons, Icons = pcall(function()
     return (loadstring(
         game:HttpGet("https://raw.githubusercontent.com/deividcomsono/lucide-roblox-direct/refs/heads/main/source.lua")
-    ) :: () -> IconModule)()
+    ))()
 end)
 
-function IsValidCustomIcon(Icon: string)
+function IsValidCustomIcon(Icon)
     return typeof(Icon) == "string"
         and (Icon:match("rbxasset") or Icon:match("roblox%.com/asset/%?id=") or Icon:match("rbxthumb://type="))
 end
 
-function Library:GetIcon(IconName: string)
+function Library:GetIcon(IconName)
     if not FetchIcons then
         return
     end
@@ -413,7 +404,7 @@ function Library:GetIcon(IconName: string)
     return Icon
 end
 
-function Library:GetCustomIcon(IconName: string)
+function Library:GetCustomIcon(IconName)
     if not IsValidCustomIcon(IconName) then
         return Library:GetIcon(IconName)
     else
@@ -432,7 +423,7 @@ function Library:SetIconModule(module: IconModule)
 end
 
 --// BetterColor \\--
-function Library:GetBetterColor(Color: Color3, Add: number): Color3
+function Library:GetBetterColor(Color, Add)
     Add = Add * 2
     return Color3.fromRGB(
         math.clamp(Color.R * 255 + Add, 0, 255),
@@ -442,28 +433,27 @@ function Library:GetBetterColor(Color: Color3, Add: number): Color3
 end
 
 --// Validate \\--
-function Library:Validate(Table: { [string]: any }, Template: { [string]: any }): { [string]: any }
+function Library:Validate(Table, Template)
     if typeof(Table) ~= "table" then
         return Template
     end
     for k, v in pairs(Template) do
-        if typeof(k) == "number" then
-            continue
-        end
-        if typeof(v) == "table" then
-            Table[k] = Library:Validate(Table[k], v)
-        elseif Table[k] == nil then
-            Table[k] = v
+        if typeof(k) ~= "number" then
+            if typeof(v) == "table" then
+                Table[k] = Library:Validate(Table[k], v)
+            elseif Table[k] == nil then
+                Table[k] = v
+            end
         end
     end
     return Table
 end
 
 --// SetDPIScale \\--
-function Library:SetDPIScale(value: number)
+function Library:SetDPIScale(value)
     assert(type(value) == "number", "Expected type number for DPI scale but got " .. typeof(value))
     DPIScale = value / 100
-    Library.MinSize = (if Library.IsMobile then Vector2.new(550, 200) else Vector2.new(550, 300)) * DPIScale
+    Library.MinSize = ternary(Library.IsMobile, Vector2.new(550, 200), Vector2.new(550, 300)) * DPIScale
 end
 
 local function GetPlayersString()
@@ -3409,7 +3399,7 @@ do
             for _, Dependency in next, DepGroupbox.Dependencies do
                 local Elem = Dependency[1]
                 local Value = Dependency[2]
-                if if Elem.Multi then not table.find(Elem:GetActiveValues(), Value) else Elem.Value ~= Value then
+                if ternary(Elem.Multi, not table.find(Elem:GetActiveValues(), Value), Elem.Value ~= Value) then
                     BoxOuter.Visible = false
                     DepGroupbox:Resize()
                     return
@@ -3445,12 +3435,12 @@ do
         local LastMousePos, LastPinchDist = nil, 0;
 
         local Viewport = {
-            Object = if Info.Clone then Info.Object:Clone() else Info.Object;
-            Camera = if not Info.Camera then Instance.new('Camera') else Info.Camera;
+            Object = ternary(Info.Clone, Info.Object:Clone(), Info.Object);
+            Camera = ternary(Info.Camera, Info.Camera, Instance.new('Camera'));
             Interactive = Info.Interactive;
             AutoFocus = Info.AutoFocus;
-            Height = if typeof(Info.Height) == 'number' and Info.Height > 0 then Info.Height else 200;
-            Visible = if Info.Visible ~= nil then Info.Visible else true;
+            Height = ternary(typeof(Info.Height) == 'number' and Info.Height > 0, Info.Height, 200);
+            Visible = ternary(Info.Visible ~= nil, Info.Visible, true);
             Type = 'Viewport';
         };
 
@@ -3660,7 +3650,7 @@ do
             FocusCamera();
         end;
 
-        function Viewport:SetObject(Object: Instance, Clone: boolean?)
+        function Viewport:SetObject(Object, Clone)
             assert(Object, 'Object cannot be nil.');
 
             if Clone then
@@ -3677,7 +3667,7 @@ do
             Groupbox:Resize();
         end;
 
-        function Viewport:SetHeight(Height: number)
+        function Viewport:SetHeight(Height)
             assert(Height > 0, 'Height must be greater than 0.');
             Viewport.Height = Height;
 
@@ -3693,7 +3683,7 @@ do
             FocusCamera();
         end;
 
-        function Viewport:SetCamera(Camera: Instance)
+        function Viewport:SetCamera(Camera)
             assert(
                 Camera and typeof(Camera) == 'Instance' and Camera:IsA('Camera'),
                 'Camera must be a valid Camera instance.'
@@ -3703,12 +3693,12 @@ do
             ViewportFrame.CurrentCamera = Camera;
         end;
 
-        function Viewport:SetInteractive(Interactive: boolean)
+        function Viewport:SetInteractive(Interactive)
             Viewport.Interactive = Interactive;
             ViewportFrame.Active = Interactive;
         end;
 
-        function Viewport:SetVisible(Visible: boolean)
+        function Viewport:SetVisible(Visible)
             Viewport.Visible = Visible;
 
             Holder.Visible = Viewport.Visible;
@@ -3740,11 +3730,11 @@ do
             Color = Info.Color;
             RectOffset = Info.RectOffset;
             RectSize = Info.RectSize;
-            Height = if typeof(Info.Height) == 'number' and Info.Height > 0 then Info.Height else 200;
+            Height = ternary(typeof(Info.Height) == 'number' and Info.Height > 0, Info.Height, 200);
             ScaleType = Info.ScaleType;
             Transparency = Info.Transparency;
             BackgroundTransparency = tonumber(Info.BackgroundTransparency) or 0;
-            Visible = if Info.Visible ~= nil then Info.Visible else true;
+            Visible = ternary(Info.Visible ~= nil, Info.Visible, true);
             Type = 'Image';
         };
 
@@ -3805,7 +3795,7 @@ do
 
         local ImageLabel = Library:Create('ImageLabel', ImageProperties);
 
-        function Image:SetHeight(Height: number)
+        function Image:SetHeight(Height)
             assert(Height > 0, 'Height must be greater than 0.');
             Image.Height = Height;
 
@@ -3813,7 +3803,7 @@ do
             Groupbox:Resize();
         end;
 
-        function Image:SetImage(NewImage: string)
+        function Image:SetImage(NewImage)
             assert(typeof(NewImage) == 'string', 'Image must be a string.');
 
             local Icon = Library:GetCustomIcon(NewImage);
@@ -3858,7 +3848,7 @@ do
             Image.ScaleType = ScaleType;
         end;
 
-        function Image:SetTransparency(Transparency: number)
+        function Image:SetTransparency(Transparency)
             assert(typeof(Transparency) == 'number', 'Transparency must be a number between 0 and 1.');
             assert(Transparency >= 0 and Transparency <= 1, 'Transparency must be between 0 and 1.');
 
@@ -3866,7 +3856,7 @@ do
             Image.Transparency = Transparency;
         end;
 
-        function Image:SetVisible(Visible: boolean)
+        function Image:SetVisible(Visible)
             Image.Visible = Visible;
 
             Holder.Visible = Image.Visible;
@@ -3958,7 +3948,7 @@ do
 
         VideoFrameInstance.Playing = Video.Playing;
 
-        function Video:SetHeight(Height: number)
+        function Video:SetHeight(Height)
             assert(Height > 0, 'Height must be greater than 0.');
 
             Video.Height = Height;
@@ -3966,28 +3956,28 @@ do
             Groupbox:Resize();
         end;
 
-        function Video:SetVideo(NewVideo: string)
+        function Video:SetVideo(NewVideo)
             assert(typeof(NewVideo) == 'string', 'Video must be a string.');
 
             VideoFrameInstance.Video = NewVideo;
             Video.Video = NewVideo;
         end;
 
-        function Video:SetLooped(Looped: boolean)
+        function Video:SetLooped(Looped)
             assert(typeof(Looped) == 'boolean', 'Looped must be a boolean.');
 
             VideoFrameInstance.Looped = Looped;
             Video.Looped = Looped;
         end;
 
-        function Video:SetVolume(Volume: number)
+        function Video:SetVolume(Volume)
             assert(typeof(Volume) == 'number', 'Volume must be a number between 0 and 10.');
 
             VideoFrameInstance.Volume = Volume;
             Video.Volume = Volume;
         end;
 
-        function Video:SetPlaying(Playing: boolean)
+        function Video:SetPlaying(Playing)
             assert(typeof(Playing) == 'boolean', 'Playing must be a boolean.');
 
             VideoFrameInstance.Playing = Playing;
@@ -4004,7 +3994,7 @@ do
             Video.Playing = false;
         end;
 
-        function Video:SetVisible(Visible: boolean)
+        function Video:SetVisible(Visible)
             Video.Visible = Visible;
 
             Holder.Visible = Video.Visible;
@@ -4066,7 +4056,7 @@ do
         Passthrough.Instance.Parent = Holder;
         pcall(function() Passthrough.Instance.ZIndex = 7 end);
 
-        function Passthrough:SetHeight(Height: number)
+        function Passthrough:SetHeight(Height)
             assert(typeof(Height) == 'number' and Height > 0, 'Height must be a number greater than 0.');
 
             Passthrough.Height = Height;
@@ -4074,7 +4064,7 @@ do
             Groupbox:Resize();
         end;
 
-        function Passthrough:SetInstance(Instance: Instance)
+        function Passthrough:SetInstance(Instance)
             assert(Instance, 'Instance must be provided.');
             assert(
                 typeof(Instance) == 'Instance' and Instance:IsA('GuiBase2d'),
@@ -4090,7 +4080,7 @@ do
             pcall(function() Passthrough.Instance.ZIndex = 7 end);
         end;
 
-        function Passthrough:SetVisible(Visible: boolean)
+        function Passthrough:SetVisible(Visible)
             Passthrough.Visible = Visible;
 
             Holder.Visible = Passthrough.Visible;
