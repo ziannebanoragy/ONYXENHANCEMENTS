@@ -144,9 +144,9 @@ local SaveManager = {} do
 
 		for i = 1, #paths do
 			local str = paths[i];
-			if isfolder(str) then continue; end;
-
-			makefolder(str);
+			if not isfolder(str) then
+				makefolder(str);
+			end
 		end;
 	end;
 
@@ -173,19 +173,15 @@ local SaveManager = {} do
 		};
 
 		for idx, toggle in next, self.Library.Toggles do
-			if not toggle.Type then continue; end;
-			if not self.Parser[toggle.Type] then continue; end;
-			if self.Ignore[idx] then continue; end;
-
-			table.insert(data.objects, self.Parser[toggle.Type].Save(idx, toggle));
+			if toggle.Type and self.Parser[toggle.Type] and not self.Ignore[idx] then
+				table.insert(data.objects, self.Parser[toggle.Type].Save(idx, toggle));
+			end
 		end;
 
 		for idx, option in next, self.Library.Options do
-			if not option.Type then continue; end;
-			if not self.Parser[option.Type] then continue; end;
-			if self.Ignore[idx] then continue; end;
-
-			table.insert(data.objects, self.Parser[option.Type].Save(idx, option));
+			if option.Type and self.Parser[option.Type] and not self.Ignore[idx] then
+				table.insert(data.objects, self.Parser[option.Type].Save(idx, option));
+			end
 		end;
 
 		local success, encoded = pcall(httpService.JSONEncode, httpService, data);
@@ -222,11 +218,9 @@ local SaveManager = {} do
 		end;
 
 		for _, option in decoded.objects do
-			if not option.type then continue; end;
-			if not self.Parser[option.type] then continue; end;
-			if self.Ignore[option.idx] then continue; end;
-
-			task.spawn(self.Parser[option.type].Load, option.idx, option);
+			if option.type and self.Parser[option.type] and not self.Ignore[option.idx] then
+				task.spawn(self.Parser[option.type].Load, option.idx, option);
+			end
 		end;
 
 		return true;
