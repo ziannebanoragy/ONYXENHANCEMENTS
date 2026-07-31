@@ -417,7 +417,7 @@ function Library:GetCustomIcon(IconName)
     end
 end
 
-function Library:SetIconModule(module: IconModule)
+function Library:SetIconModule(module)
     FetchIcons = true
     Icons = module
 end
@@ -3817,28 +3817,28 @@ do
             Image.Image = NewImage;
         end;
 
-        function Image:SetColor(Color: Color3)
+        function Image:SetColor(Color)
             assert(typeof(Color) == 'Color3', 'Color must be a Color3 value.');
 
             ImageLabel.ImageColor3 = Color;
             Image.Color = Color;
         end;
 
-        function Image:SetRectOffset(RectOffset: Vector2)
+        function Image:SetRectOffset(RectOffset)
             assert(typeof(RectOffset) == 'Vector2', 'RectOffset must be a Vector2 value.');
 
             ImageLabel.ImageRectOffset = RectOffset;
             Image.RectOffset = RectOffset;
         end;
 
-        function Image:SetRectSize(RectSize: Vector2)
+        function Image:SetRectSize(RectSize)
             assert(typeof(RectSize) == 'Vector2', 'RectSize must be a Vector2 value.');
 
             ImageLabel.ImageRectSize = RectSize;
             Image.RectSize = RectSize;
         end;
 
-        function Image:SetScaleType(ScaleType: Enum.ScaleType)
+        function Image:SetScaleType(ScaleType)
             assert(
                 typeof(ScaleType) == 'EnumItem' and ScaleType:IsA('ScaleType'),
                 'ScaleType must be a valid Enum.ScaleType.'
