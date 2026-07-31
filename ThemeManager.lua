@@ -2,6 +2,10 @@ local cloneref = (cloneref or clonereference or function(instance)
 	return instance
 end)
 
+local function ternary(cond, a, b)
+	if cond then return a else return b end
+end
+
 local clonefunction = (clonefunction or copyfunction or function(func)
 	return func
 end)
@@ -31,17 +35,17 @@ if typeof(clonefunction) == 'function' then
 	if isfolder_success == false or typeof(isfolder_error) ~= 'boolean' then
 		isfolder = function(folder)
 			local success, data = pcall(isfolder_copy, folder)
-			return (if success then data else false)
+			return ternary(success, data, false)
 		end
 
 		isfile = function(file)
 			local success, data = pcall(isfile_copy, file)
-			return (if success then data else false)
+			return ternary(success, data, false)
 		end
 
 		listfiles = function(folder)
 			local success, data = pcall(listfiles_copy, folder)
-			return (if success then data else {})
+			return ternary(success, data, {})
 		end
 	end
 end
@@ -115,8 +119,9 @@ local ThemeManager = {} do
 		local paths = self:GetPaths()
 		for i = 1, #paths do
 			local str = paths[i]
-			if isfolder(str) then continue end
-			makefolder(str)
+			if not isfolder(str) then
+				makefolder(str)
+			end
 		end
 	end
 
