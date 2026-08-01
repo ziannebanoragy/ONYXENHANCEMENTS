@@ -279,10 +279,10 @@ local Library = {
     KeybindMode = 'All';
 
     NotifyConfig = {
-        Alignment = 'Left';
-        BarSide   = 'Bottom';
-        PositionX = 0;
-        PositionY = 40;
+        Alignment = 'Center';
+        BarSide   = 'Top';
+        PositionX = 50;
+        PositionY = 1;
         ClipDescendants = false;
         MaxHeight = 200;
         Transparency = 0;
@@ -4122,8 +4122,9 @@ do
 
     Library.NotificationArea = Library:Create('Frame', {
         BackgroundTransparency = 1;
-        Position = UDim2.new(0, Library.NotifyConfig.PositionX, 0, Library.NotifyConfig.PositionY);
-        Size = UDim2.new(0, 300, 1, -Library.NotifyConfig.PositionY);
+        AnchorPoint = Vector2.new(0.5, 0);
+        Position = UDim2.new(0.5, 0, 0, 0);
+        Size = UDim2.new(1, 0, 1, 0);
         ZIndex = 100;
         Parent = ScreenGui;
     });
@@ -4131,6 +4132,8 @@ do
         Padding = UDim.new(0, 4);
         FillDirection = Enum.FillDirection.Vertical;
         SortOrder = Enum.SortOrder.LayoutOrder;
+        VerticalAlignment = Enum.VerticalAlignment.Top;
+        HorizontalAlignment = Enum.HorizontalAlignment.Center;
         Parent = Library.NotificationArea;
     });
 
@@ -4138,13 +4141,7 @@ do
         local C = Library.NotifyConfig
         for k, v in pairs(cfg or {}) do C[k] = v end
 
-        local AnchorX = C.Alignment == 'Left' and 0 or (C.Alignment == 'Right' and 1 or 0.5)
-        local AnchorY = C.BarSide == 'Top' and 0 or 1
-
-        Library.NotificationArea.AnchorPoint = Vector2.new(AnchorX, AnchorY)
-        Library.NotificationArea.Position = UDim2.new(C.PositionX / 100, 0, C.PositionY / 100, 0)
         Library.NotificationArea.ClipsDescendants = C.ClipDescendants
-        Library.NotificationArea.AutomaticSize = Enum.AutomaticSize.XY
 
         local SizeConstraint = Library.NotificationArea:FindFirstChildOfClass('UISizeConstraint')
         if C.ClipDescendants then
@@ -4158,10 +4155,8 @@ do
 
         local Layout = Library.NotificationArea:FindFirstChildOfClass('UIListLayout')
         if Layout then
-            local VAlign = C.BarSide == 'Top' and Enum.VerticalAlignment.Top or Enum.VerticalAlignment.Bottom
-            local HAlign = C.Alignment == 'Left' and Enum.HorizontalAlignment.Left or (C.Alignment == 'Right' and Enum.HorizontalAlignment.Right or Enum.HorizontalAlignment.Center)
-            Layout.VerticalAlignment = VAlign
-            Layout.HorizontalAlignment = HAlign
+            Layout.VerticalAlignment = C.BarSide == 'Top' and Enum.VerticalAlignment.Top or Enum.VerticalAlignment.Bottom
+            Layout.HorizontalAlignment = C.Alignment == 'Left' and Enum.HorizontalAlignment.Left or (C.Alignment == 'Right' and Enum.HorizontalAlignment.Right or Enum.HorizontalAlignment.Center)
         end
     end
 
@@ -4345,20 +4340,9 @@ function Library:SpawnNotify(Text, Time)
 
     Library.NotifyCounter = Library.NotifyCounter + 1
 
-    local outerAnchor = Vector2.new(0, 0)
-    if align == 'Center' then
-        outerAnchor = Vector2.new(0.5, 0)
-    elseif align == 'Right' then
-        outerAnchor = Vector2.new(1, 0)
-    end
-
     local NotifyOuter = Library:Create('Frame', {
         BackgroundTransparency = 1;
-        AnchorPoint = outerAnchor;
         BorderColor3 = Color3.new(0, 0, 0);
-        Position     = (align == 'Center')
-            and UDim2.new(0.5, 0, 0, 0)
-            or  (align == 'Right' and UDim2.new(1, 0, 0, 0) or UDim2.new(0, 0, 0, 0));
         Size = UDim2.new(0, 0, 0, YSize);
         ClipsDescendants = true;
         LayoutOrder = cfg.SortOrder == 'Text Length' and #Text or Library.NotifyCounter;
