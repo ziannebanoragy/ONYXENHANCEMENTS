@@ -735,7 +735,7 @@ function Library:BindResizeHandleGhost(clipInst, circleInst, getSize, setSize, o
     clipInst.Active = true
     local defaultTrans = circleInst.BackgroundTransparency
 
-    clipInst.InputBegan:Connect(function(Input)
+    local function onInputBegan(Input)
         if not Library:IsPointerInput(Input) then return end
 
         circleInst.BackgroundTransparency = 1
@@ -766,9 +766,9 @@ function Library:BindResizeHandleGhost(clipInst, circleInst, getSize, setSize, o
                 dragInput = mInput
             end
         end)
+        Library:GiveSignal(moveConn)
 
-        local rsConn
-        rsConn = RunService.RenderStepped:Connect(function()
+        local rsConn = RunService.RenderStepped:Connect(function()
             if not dragging then rsConn:Disconnect() return end
             local dx = dragInput.Position.X - startX
             local dy = dragInput.Position.Y - startY
@@ -776,6 +776,7 @@ function Library:BindResizeHandleGhost(clipInst, circleInst, getSize, setSize, o
             local nh = math.max(startH + dy, minH)
             UpdateGhost(gx, gy, nw, nh)
         end)
+        Library:GiveSignal(rsConn)
 
         local endConn
         endConn = InputService.InputEnded:Connect(function(eInput)
@@ -798,7 +799,10 @@ function Library:BindResizeHandleGhost(clipInst, circleInst, getSize, setSize, o
                 onFinish()
             end
         end)
-    end)
+        Library:GiveSignal(endConn)
+    end
+
+    Library:GiveSignal(clipInst.InputBegan:Connect(onInputBegan))
 end
 
 function Library:AddToolTip(InfoStr, HoverInstance)
@@ -5260,8 +5264,8 @@ function Library:CreateWindow(...)
             BackgroundTransparency  = 1;
             ClipsDescendants        = true;
             Position                = UDim2.new(1, 0, 1, 0);
-            Size                    = UDim2.fromOffset(22, 22);
-            ZIndex                  = 300;
+            Size                    = UDim2.fromOffset(30, 30);
+            ZIndex                  = 500;
             Parent                  = Inner;
         })
         local scCircle = Library:Create('Frame', {
@@ -5270,8 +5274,8 @@ function Library:CreateWindow(...)
             BackgroundTransparency  = 0.4;
             BorderSizePixel         = 0;
             Position                = UDim2.fromOffset(0, 0);
-            Size                    = UDim2.fromOffset(44, 44);
-            ZIndex                  = 301;
+            Size                    = UDim2.fromOffset(60, 60);
+            ZIndex                  = 501;
             Parent                  = scClip;
         })
         Library:AddToRegistry(scCircle, { BackgroundColor3 = 'AccentColor' })
