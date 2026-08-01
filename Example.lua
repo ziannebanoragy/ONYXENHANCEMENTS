@@ -152,10 +152,6 @@ NotifGroup:AddDropdown('NotifBarSide', {
     Values = { 'Top', 'Bottom', 'Left', 'Right' },
     Callback = function(v) Library:ConfigureNotifications({ BarSide = v }) end,
 })
-NotifGroup:AddSlider('NotifPosX', {
-    Text = 'Position X', Default = 0, Min = 0, Max = 100, Rounding = 0, Suffix = '%',
-    Callback = function(v) Library:ConfigureNotifications({ PositionX = v }) end,
-})
 NotifGroup:AddSlider('NotifPosY', {
     Text = 'Position Y', Default = 40, Min = 0, Max = 100, Rounding = 0, Suffix = '%',
     Callback = function(v) Library:ConfigureNotifications({ PositionY = v }) end,
