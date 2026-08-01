@@ -282,7 +282,7 @@ local Library = {
         Alignment = 'Center';
         BarSide   = 'Top';
         PositionX = 50;
-        PositionY = 1;
+        PositionY = 40;
         ClipDescendants = false;
         MaxHeight = 200;
         Transparency = 0;
@@ -4136,12 +4136,17 @@ do
         HorizontalAlignment = Enum.HorizontalAlignment.Center;
         Parent = Library.NotificationArea;
     });
+    Library.NotifPadding = Library:Create('UIPadding', {
+        PaddingTop = UDim.new(0, 0);
+        Parent = Library.NotificationArea;
+    });
 
     function Library:ConfigureNotifications(cfg)
         local C = Library.NotifyConfig
         for k, v in pairs(cfg or {}) do C[k] = v end
 
         Library.NotificationArea.ClipsDescendants = C.ClipDescendants
+        Library.NotifPadding.PaddingTop = UDim.new(C.PositionY / 100, 0)
 
         local SizeConstraint = Library.NotificationArea:FindFirstChildOfClass('UISizeConstraint')
         if C.ClipDescendants then
