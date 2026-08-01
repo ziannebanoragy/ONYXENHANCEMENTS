@@ -185,12 +185,13 @@ SaveManager:IgnoreThemeSettings()
 SaveManager:SetIgnoreIndexes({})
 
 ThemeManager:SetFolder('onyxenhancements')
+ThemeManager.DefaultTheme = 'UE'
 SaveManager:SetFolder('onyxenhancements/configs')
 
 SaveManager:BuildConfigSection(Tabs['Ui'])
 ThemeManager:ApplyToTab(Tabs['Ui'])
 
-ThemeManager:ApplyTheme('Default')
+ThemeManager:ApplyTheme('UE')
 
 Library.ToggleKeybind = Options.MenuKeybind
 Library.KeybindFrame.Visible = false
