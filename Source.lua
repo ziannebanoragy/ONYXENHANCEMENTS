@@ -637,92 +637,167 @@ function Library:MakeDraggable(Instance, Cutoff, IsWindow)
     end)
 end;
 
-function Library:MakeResizable(Instance, MinSize)
-    if Library.IsMobile then
-        return
+function Library:CreateGhostOverlay(x, y, w, h)
+    local Fill = DrawingLib.new("Square")
+    Fill.Filled       = true
+    Fill.Thickness    = 0
+    Fill.Transparency = 0.35
+    Fill.Color        = Library.AccentColor
+    Fill.Position     = Vector2.new(x, y)
+    Fill.Size         = Vector2.new(w, h)
+    Fill.Visible      = true
+
+    local Border = Instance.new("Frame")
+    Border.Name                   = "GhostBorder"
+    Border.Active                 = false
+    Border.BackgroundTransparency = 1
+    Border.Position               = UDim2.fromOffset(x, y)
+    Border.Size                   = UDim2.fromOffset(w, h)
+    Border.ZIndex                 = 2147483647
+    Border.Parent                 = Library.ScreenGui
+
+    local Stroke = Instance.new("UIStroke")
+    Stroke.Thickness       = 1
+    Stroke.Color           = Library.AccentColor
+    Stroke.Transparency    = 0
+    Stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    Stroke.LineJoinMode    = Enum.LineJoinMode.Miter
+    Stroke.Parent          = Border
+
+    local function Update(nx, ny, nw, nh)
+        Fill.Color     = Library.AccentColor
+        Fill.Position   = Vector2.new(nx, ny)
+        Fill.Size       = Vector2.new(nw, nh)
+        Stroke.Color    = Library.AccentColor
+        Border.Position = UDim2.fromOffset(nx, ny)
+        Border.Size     = UDim2.fromOffset(nw, nh)
     end
 
-    Instance.Active = true
-    
-    local ResizerImage_Size = 25 * DPIScale
-    local ResizerImage_HoverTransparency = 0.5
-
-    local Resizer = Library:Create("Frame", {
-        SizeConstraint = Enum.SizeConstraint.RelativeXX;
-        BackgroundColor3 = Color3.new(0, 0, 0);
-        BackgroundTransparency = 1;
-        BorderSizePixel = 0;
-        Size = UDim2.new(0, 30, 0, 30);
-        Position = UDim2.new(1, -30, 1, -30);
-        Visible = true;
-        ClipsDescendants = true;
-        ZIndex = 1;
-        Parent = Instance;
-    })
-
-    local ResizerImage = Library:Create("ImageButton", {
-        BackgroundColor3 = Library.AccentColor;
-        BackgroundTransparency = 1;
-        BorderSizePixel = 0;
-        Size = UDim2.new(2, 0, 2, 0);
-        Position = UDim2.new(1, -30, 1, -30);
-        ZIndex = 2;
-        Parent = Resizer;
-    })
-
-    local ResizerImageUICorner = Library:Create("UICorner", {
-        CornerRadius = UDim.new(0.5, 0);
-        Parent = ResizerImage;
-    })
-
-    Library:AddToRegistry(ResizerImage, { BackgroundColor3 = "AccentColor"; })
-
-    Resizer.Size = UDim2.fromOffset(ResizerImage_Size, ResizerImage_Size)
-    Resizer.Position = UDim2.new(1, -ResizerImage_Size, 1, -ResizerImage_Size)
-    MinSize = MinSize or Library.MinSize
-
-    local OffsetPos
-    Resizer.Parent = Instance
-
-    local function FinishResize(Transparency)
-        ResizerImage.Position = UDim2.new()
-        ResizerImage.Size = UDim2.new(2, 0, 2, 0)
-        ResizerImage.Parent = Resizer
-        ResizerImage.BackgroundTransparency = Transparency
-        ResizerImageUICorner.Parent = ResizerImage
-        OffsetPos = nil
+    local function Remove()
+        Fill:Remove()
+        Border:Destroy()
     end
 
-    ResizerImage.MouseButton1Down:Connect(function()
-        if not OffsetPos then
-            OffsetPos = Vector2.new(Mouse.X - (Instance.AbsolutePosition.X + Instance.AbsoluteSize.X), Mouse.Y - (Instance.AbsolutePosition.Y + Instance.AbsoluteSize.Y))
+    return Update, Remove
+end
 
-            ResizerImage.BackgroundTransparency = 1
-            ResizerImage.Size = UDim2.fromOffset(Library.ScreenGui.AbsoluteSize.X, Library.ScreenGui.AbsoluteSize.Y)
-            ResizerImage.Position = UDim2.new()
-            ResizerImageUICorner.Parent = nil
-            ResizerImage.Parent = Library.ScreenGui
+function Library:BindResizeHandle(inst, getSize, setSize, onFinish)
+    if not inst then return end
+    inst.Active = true
+
+    local resizing   = false
+    local startX, startY = 0, 0
+    local startW, startH = 0, 0
+    local dragInput  = nil
+
+    inst.InputBegan:Connect(function(Input)
+        if not Library:IsPointerInput(Input) then return end
+        resizing = true
+        dragInput = Input
+        startX = Input.Position.X
+        startY = Input.Position.Y
+        if type(getSize) == 'function' then
+            startW, startH = getSize()
         end
     end)
 
-    ResizerImage.MouseMoved:Connect(function()
-        if OffsetPos then		
-            local MousePos = Vector2.new(Mouse.X - OffsetPos.X, Mouse.Y - OffsetPos.Y)
-            local FinalSize = Vector2.new(math.clamp(MousePos.X - Instance.AbsolutePosition.X, MinSize.X, math.huge), math.clamp(MousePos.Y - Instance.AbsolutePosition.Y, MinSize.Y, math.huge))
-            Instance.Size = UDim2.fromOffset(FinalSize.X, FinalSize.Y)
+    inst.InputChanged:Connect(function(Input)
+        if Input.UserInputType == Enum.UserInputType.MouseMovement
+            or Input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = Input
         end
     end)
 
-    ResizerImage.MouseEnter:Connect(function()
-        FinishResize(ResizerImage_HoverTransparency)
+    InputService.InputChanged:Connect(function(Input)
+        if not resizing then return end
+        if Input.UserInputType ~= Enum.UserInputType.MouseMovement
+            and Input.UserInputType ~= Enum.UserInputType.Touch then return end
+        dragInput = Input
+        local dX = Input.Position.X - startX
+        local dY = Input.Position.Y - startY
+        if type(setSize) == 'function' then
+            setSize(startW + dX, startH + dY)
+        end
     end)
 
-    ResizerImage.MouseLeave:Connect(function()
-        FinishResize(1)
+    InputService.InputEnded:Connect(function(Input)
+        if not resizing or not Library:IsPointerInput(Input) then return end
+        resizing = false
+        dragInput = nil
+        if type(onFinish) == 'function' then
+            onFinish()
+        end
     end)
+end
 
-    ResizerImage.MouseButton1Up:Connect(function()
-        FinishResize(ResizerImage_HoverTransparency)
+function Library:BindResizeHandleGhost(clipInst, circleInst, getSize, setSize, onFinish)
+    if not clipInst then return end
+    clipInst.Active = true
+    local defaultTrans = circleInst.BackgroundTransparency
+
+    clipInst.InputBegan:Connect(function(Input)
+        if not Library:IsPointerInput(Input) then return end
+
+        circleInst.BackgroundTransparency = 1
+
+        local startX = Input.Position.X
+        local startY = Input.Position.Y
+        local startW, startH = 0, 0
+        if type(getSize) == 'function' then
+            startW, startH = getSize()
+        end
+
+        local minW = Library.MinSize and Library.MinSize.X or 460
+        local minH = Library.MinSize and Library.MinSize.Y or 420
+
+        local drawOff = Vector2.new(Input.Position.X, Input.Position.Y) - InputService:GetMouseLocation()
+        local parentAbs = (clipInst.Parent and clipInst.Parent.AbsolutePosition) or Vector2.new(0, 0)
+        local gx = parentAbs.X - drawOff.X
+        local gy = parentAbs.Y - drawOff.Y
+
+        local UpdateGhost, RemoveGhost = Library:CreateGhostOverlay(gx, gy, startW, startH)
+
+        local dragging = true
+        local dragInput = Input
+
+        local moveConn = InputService.InputChanged:Connect(function(mInput)
+            if mInput.UserInputType == Enum.UserInputType.MouseMovement
+                or mInput.UserInputType == Enum.UserInputType.Touch then
+                dragInput = mInput
+            end
+        end)
+
+        local rsConn
+        rsConn = RunService.RenderStepped:Connect(function()
+            if not dragging then rsConn:Disconnect() return end
+            local dx = dragInput.Position.X - startX
+            local dy = dragInput.Position.Y - startY
+            local nw = math.max(startW + dx, minW)
+            local nh = math.max(startH + dy, minH)
+            UpdateGhost(gx, gy, nw, nh)
+        end)
+
+        local endConn
+        endConn = InputService.InputEnded:Connect(function(eInput)
+            if not Library:IsPointerInput(eInput) then return end
+            dragging = false
+            moveConn:Disconnect()
+            endConn:Disconnect()
+
+            local dx = dragInput.Position.X - startX
+            local dy = dragInput.Position.Y - startY
+            RemoveGhost()
+
+            if type(setSize) == 'function' then
+                setSize(startW + dx, startH + dy)
+            end
+
+            circleInst.BackgroundTransparency = defaultTrans
+
+            if type(onFinish) == 'function' then
+                onFinish()
+            end
+        end)
     end)
 end
 
@@ -5165,6 +5240,57 @@ function Library:CreateWindow(...)
             pcall(function() InnerVideoBackground:Pause() end);
         end;
     end;
+
+    function Window:SetWindowSize(w, h, skipSave)
+        local minW = Library.MinSize and Library.MinSize.X or 460
+        local minH = Library.MinSize and Library.MinSize.Y or 420
+        w = math.max(tonumber(w) or minW, minW)
+        h = math.max(tonumber(h) or minH, minH)
+        Outer.Size = UDim2.fromOffset(w, h)
+    end
+
+    function Window:GetWindowSize()
+        return Outer.Size.X.Offset, Outer.Size.Y.Offset
+    end
+
+    if not Library.IsMobile then
+        local scClip = Library:Create('Frame', {
+            Active                  = true;
+            AnchorPoint             = Vector2.new(1, 1);
+            BackgroundTransparency  = 1;
+            ClipsDescendants        = true;
+            Position                = UDim2.new(1, 0, 1, 0);
+            Size                    = UDim2.fromOffset(22, 22);
+            ZIndex                  = 300;
+            Parent                  = Inner;
+        })
+        local scCircle = Library:Create('Frame', {
+            AnchorPoint             = Vector2.new(0, 0);
+            BackgroundColor3        = Library.AccentColor;
+            BackgroundTransparency  = 0.4;
+            BorderSizePixel         = 0;
+            Position                = UDim2.fromOffset(0, 0);
+            Size                    = UDim2.fromOffset(44, 44);
+            ZIndex                  = 301;
+            Parent                  = scClip;
+        })
+        Library:AddToRegistry(scCircle, { BackgroundColor3 = 'AccentColor' })
+        Library:Create('UICorner', { CornerRadius = UDim.new(1, 0); Parent = scCircle })
+        Window.ResizeHandle = scClip
+
+        scClip.MouseEnter:Connect(function()
+            scCircle.BackgroundTransparency = 0.65
+        end)
+        scClip.MouseLeave:Connect(function()
+            scCircle.BackgroundTransparency = 0.4
+        end)
+
+        Library:BindResizeHandleGhost(scClip, scCircle, function()
+            return Outer.Size.X.Offset, Outer.Size.Y.Offset
+        end, function(w, h)
+            Window:SetWindowSize(w, h, true)
+        end)
+    end
 
     Window.Holder = Outer;
     Library.Window = Window;
