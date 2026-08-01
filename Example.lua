@@ -143,12 +143,12 @@ MenuGroup:AddToggle('ShowWatermark', { Text = 'Show Watermark', Default = true, 
 
 local NotifGroup = Tabs['Ui']:AddRightGroupbox('Notifications')
 NotifGroup:AddDropdown('NotifAlignment', {
-    Text = 'Alignment', Default = 'Left',
+    Text = 'Alignment', Default = 'Center',
     Values = { 'Left', 'Center', 'Right' },
     Callback = function(v) Library:ConfigureNotifications({ Alignment = v }) end,
 })
 NotifGroup:AddDropdown('NotifBarSide', {
-    Text = 'Bar Side', Default = 'Bottom',
+    Text = 'Bar Side', Default = 'Top',
     Values = { 'Top', 'Bottom', 'Left', 'Right' },
     Callback = function(v) Library:ConfigureNotifications({ BarSide = v }) end,
 })
