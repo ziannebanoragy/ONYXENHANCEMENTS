@@ -306,19 +306,21 @@ do
     local backdropGui = Instance.new("ScreenGui")
     backdropGui.Name = "OnyxBackdrop"
     backdropGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
-    backdropGui.DisplayOrder = 998
+    backdropGui.DisplayOrder = 1001
     backdropGui.ResetOnSpawn = false
+    backdropGui.IgnoreGuiInset = true
     pcall(ProtectGui, backdropGui)
     backdropGui.Parent = (gethui and gethui()) or CoreGui
 
-    local Backdrop = Instance.new("Frame")
+    local Backdrop = Instance.new("TextButton")
     Backdrop.Name = "Overlay"
     Backdrop.Size = UDim2.fromScale(1, 1)
     Backdrop.Position = UDim2.fromScale(0, 0)
     Backdrop.BackgroundColor3 = Color3.new(0, 0, 0)
-    Backdrop.BackgroundTransparency = 0.9
+    Backdrop.BackgroundTransparency = 1
     Backdrop.BorderSizePixel = 0
-    Backdrop.ZIndex = 2147483647
+    Backdrop.Text = ""
+    Backdrop.ZIndex = 1
     Backdrop.Visible = false
     Backdrop.Parent = backdropGui
     Library.Backdrop = Backdrop
@@ -330,7 +332,8 @@ do
     OnyxLogoHolder.Size = UDim2.fromOffset(600, 600)
     OnyxLogoHolder.BackgroundTransparency = 1
     OnyxLogoHolder.BorderSizePixel = 0
-    OnyxLogoHolder.ZIndex = 2147483647
+    OnyxLogoHolder.ZIndex = 2
+    OnyxLogoHolder.Active = false
     OnyxLogoHolder.Visible = false
     OnyxLogoHolder.Parent = backdropGui
 
@@ -391,24 +394,26 @@ do
     Library.OnyxLogoOrbitDistance = OnyxLogoOrbitDistance
 
     if OnyxLogoModel then
+        local center = OnyxLogoModel:GetPivot().Position
+        local dist = OnyxLogoOrbitDistance
+        OnyxLogoCamera.CFrame = CFrame.new(
+            center + Vector3.new(math.sin(0) * dist, dist * 0.3, math.cos(0) * dist),
+            center
+        )
+
         task.spawn(function()
             local angle = 0
-            local currentCFrame
-            local center = OnyxLogoModel:GetPivot().Position
+            local currentCFrame = OnyxLogoCamera.CFrame
             while OnyxLogoModel and OnyxLogoModel.Parent do
                 local dt = RunService.RenderStepped:Wait()
                 if Library.OnyxLogoFrame and Library.OnyxLogoFrame.Visible then
                     angle = angle + math.rad(90) * (Library.OnyxLogoSpeed or 0.5) * dt
-                    local dist = Library.OnyxLogoOrbitDistance or 15
+                    local d = Library.OnyxLogoOrbitDistance or 15
                     local targetCFrame = CFrame.new(
-                        center + Vector3.new(math.sin(angle) * dist, dist * 0.3, math.cos(angle) * dist),
+                        center + Vector3.new(math.sin(angle) * d, d * 0.3, math.cos(angle) * d),
                         center
                     )
-                    if not currentCFrame then
-                        currentCFrame = targetCFrame
-                    else
-                        currentCFrame = currentCFrame:Lerp(targetCFrame, 1 - math.exp(-12 * dt))
-                    end
+                    currentCFrame = currentCFrame:Lerp(targetCFrame, 1 - math.exp(-12 * dt))
                     Library.OnyxLogoCamera.CFrame = currentCFrame
                 end
             end
