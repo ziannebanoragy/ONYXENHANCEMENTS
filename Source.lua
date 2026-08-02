@@ -5463,38 +5463,78 @@ getgenv().Library = Library
 function Library:CreateFloatingPanel(config)
     local w = config.Width or 860
     local h = config.Height or 520
+
     local outer = Library:Create("Frame", {
         AnchorPoint       = Vector2.new(0.5, 0.5),
         Position          = config.Position or UDim2.fromScale(0.5, 0.5),
         Size              = UDim2.fromOffset(w, h),
-        BackgroundColor3  = Library.MainColor,
-        BorderColor3      = Library.OutlineColor,
+        BackgroundColor3  = Color3.new(0, 0, 0),
+        BorderSizePixel   = 0,
         Visible           = false,
         ZIndex            = 100,
         Parent            = Library.ScreenGui,
     })
-    Library:AddToRegistry(outer, {BackgroundColor3="MainColor", BorderColor3="OutlineColor"})
-    Library:MakeDraggable(outer, 22)
+    Library:MakeDraggable(outer, 25, true)
+
+    local outerCorner = Library:Create("UICorner", {
+        CornerRadius = UDim.new(0, 8),
+        Parent = outer,
+    })
+
+    local inner = Library:Create("Frame", {
+        Name                = "Inner",
+        BackgroundColor3    = Library.MainColor,
+        BorderColor3        = Library.OutlineColor,
+        BorderMode          = Enum.BorderMode.Inset,
+        Position            = UDim2.new(0, 1, 0, 1),
+        Size                = UDim2.new(1, -2, 1, -2),
+        ZIndex              = 101,
+        Parent              = outer,
+    })
+    Library:AddToRegistry(inner, {BackgroundColor3="MainColor", BorderColor3="OutlineColor"})
+
+    local innerCorner = Library:Create("UICorner", {
+        CornerRadius = UDim.new(0, 7),
+        Parent = inner,
+    })
+
     local titleBar = Library:Create("Frame", {
-        Size              = UDim2.new(1, 0, 0, 22),
+        Size              = UDim2.new(1, 0, 0, 25),
         BackgroundColor3  = Library.AccentColor,
         BorderSizePixel   = 0,
-        ZIndex            = 101,
-        Parent            = outer,
+        ZIndex            = 102,
+        Parent            = inner,
     })
     Library:AddToRegistry(titleBar, {BackgroundColor3="AccentColor"})
+
+    local titleCorner = Library:Create("UICorner", {
+        CornerRadius = UDim.new(0, 7),
+        Parent = titleBar,
+    })
+
+    local titleCover = Library:Create("Frame", {
+        Position          = UDim2.new(0, 0, 1, -7),
+        Size              = UDim2.new(1, 0, 0, 7),
+        BackgroundColor3  = Library.AccentColor,
+        BorderSizePixel   = 0,
+        ZIndex            = 102,
+        Parent            = titleBar,
+    })
+    Library:AddToRegistry(titleCover, {BackgroundColor3="AccentColor"})
+
     Library:CreateLabel({
-        Position        = UDim2.new(0, 5, 0, 0),
-        Size            = UDim2.new(1, -26, 1, 0),
-        Text            = config.Title or "panel",
+        Position        = UDim2.new(0, 10, 0, 0),
+        Size            = UDim2.new(1, -36, 1, 0),
+        Text            = config.Title or "Panel",
         TextXAlignment  = Enum.TextXAlignment.Left,
-        TextSize        = 14,
-        ZIndex          = 102,
+        TextSize        = 13,
+        ZIndex          = 103,
         Parent          = titleBar,
     })
+
     local closeBtn = Library:Create("TextButton", {
         AnchorPoint       = Vector2.new(1, 0.5),
-        Position          = UDim2.new(1, -3, 0.5, 0),
+        Position          = UDim2.new(1, -6, 0.5, 0),
         Size              = UDim2.new(0, 18, 0, 18),
         BackgroundColor3  = Library.RiskColor,
         BorderSizePixel   = 0,
@@ -5502,21 +5542,47 @@ function Library:CreateFloatingPanel(config)
         TextColor3        = Library.FontColor,
         TextSize          = 12,
         Font              = Library.Font,
-        ZIndex            = 102,
+        ZIndex            = 103,
         Parent            = titleBar,
     })
     Library:AddToRegistry(closeBtn, {BackgroundColor3="RiskColor", TextColor3="FontColor"})
+
+    local closeCorner = Library:Create("UICorner", {
+        CornerRadius = UDim.new(0, 4),
+        Parent = closeBtn,
+    })
+
     closeBtn.MouseButton1Click:Connect(function()
         outer.Visible = false
         if config.OnClose then config.OnClose() end
     end)
-    local content = Library:Create("Frame", {
-        Position                = UDim2.new(0, 0, 0, 22),
-        Size                    = UDim2.new(1, 0, 1, -22),
+
+    local content = Library:Create("ScrollingFrame", {
+        Position                = UDim2.new(0, 8, 0, 33),
+        Size                    = UDim2.new(1, -16, 1, -41),
         BackgroundTransparency  = 1,
-        ZIndex                  = 101,
-        Parent                  = outer,
+        BorderSizePixel         = 0,
+        ScrollBarThickness     = 3,
+        ScrollBarImageColor3    = Library.AccentColor,
+        CanvasSize              = UDim2.new(0, 0, 0, 0),
+        AutomaticCanvasSize     = Enum.AutomaticSize.Y,
+        ZIndex                  = 102,
+        Parent                  = inner,
     })
+    Library:AddToRegistry(content, {ScrollBarImageColor3="AccentColor"})
+
+    local contentLayout = Library:Create("UIListLayout", {
+        Padding = UDim.new(0, 4),
+        SortOrder = Enum.SortOrder.LayoutOrder,
+        Parent = content,
+    })
+
+    local contentPadding = Library:Create("UIPadding", {
+        PaddingTop = UDim.new(0, 2),
+        PaddingBottom = UDim.new(0, 2),
+        Parent = content,
+    })
+
     local panel = {Frame = outer, Content = content}
     function panel:Show() outer.Visible = true end
     function panel:Hide() outer.Visible = false end
