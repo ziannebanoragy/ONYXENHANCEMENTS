@@ -5646,7 +5646,7 @@ function Library:Loader(Config)
 		ASCII.Size = UDim2.new(0, textsize.X + 100, 0, 50)
 		LIT.Size = UDim2.new(0, (textsize.X * 2.5) + (UText[TEXT] or 0), 0, 100)
 
-		UIGradient.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 116, 116)), ColorSequenceKeypoint.new(1, Color3.fromRGB(132, 58, 58))})
+		UIGradient.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromRGB(71, 119, 182)), ColorSequenceKeypoint.new(1, Color3.fromRGB(40, 70, 120))})
 		UIGradient.Rotation = 88
 		UIGradient.Parent = ASCII
 
@@ -5702,7 +5702,7 @@ function Library:Loader(Config)
 
 	StartText.Size = UDim2.new(0, baseSIZX + 100, 0, 50)
 
-	UIGradient.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 116, 116)), ColorSequenceKeypoint.new(1, Color3.fromRGB(132, 58, 58))})
+	UIGradient.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromRGB(71, 119, 182)), ColorSequenceKeypoint.new(1, Color3.fromRGB(40, 70, 120))})
 	UIGradient.Rotation = 88
 	UIGradient.Parent = StartText
 
