@@ -5525,4 +5525,219 @@ function Library:CreateFloatingPanel(config)
     return panel
 end
 
+function Library:RandomString()
+    local chars = {}
+    for i = 1, 20 do
+        chars[i] = string.char(math.random(64, 102))
+    end
+    return table.concat(chars)
+end
+
+function Library:Tween(instance, time, props, style)
+    local tween = TweenService:Create(instance, TweenInfo.new(time or 1, style or Enum.EasingStyle.Quint), props)
+    tween:Play()
+    return tween
+end
+
+function Library:Loader(Config)
+    Config = Config or {}
+    Config.Name = Config.Name or "ONYX"
+    Config.Duration = Config.Duration or 3.5
+    Config.Scale = Config.Scale or 3
+
+    local Blur = Instance.new("BlurEffect")
+    local LoaderGui = Instance.new("ScreenGui")
+    local center = Instance.new("Frame")
+    local texts = Instance.new("Frame")
+    local UIListLayout = Instance.new("UIListLayout")
+    local BlackFrame = Instance.new("Frame")
+
+    LoaderGui.Name = Library:RandomString()
+    LoaderGui.Parent = CoreGui
+    LoaderGui.IgnoreGuiInset = true
+    LoaderGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
+
+    center.Name = Library:RandomString()
+    center.Parent = LoaderGui
+    center.AnchorPoint = Vector2.new(0.5, 0.5)
+    center.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    center.BackgroundTransparency = 1
+    center.BorderColor3 = Color3.fromRGB(0, 0, 0)
+    center.BorderSizePixel = 0
+    center.Position = UDim2.new(0.5, 0, 0.5, 0)
+
+    texts.Name = Library:RandomString()
+    texts.Parent = LoaderGui
+    texts.AnchorPoint = Vector2.new(0.5, 0.5)
+    texts.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    texts.BackgroundTransparency = 1
+    texts.BorderColor3 = Color3.fromRGB(0, 0, 0)
+    texts.BorderSizePixel = 0
+    texts.Position = UDim2.new(0.5, 0, 0.5, 0)
+    texts.Size = UDim2.new(1, 0, 0, 200)
+
+    UIListLayout.Parent = texts
+    UIListLayout.FillDirection = Enum.FillDirection.Horizontal
+    UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    UIListLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+    UIListLayout.Padding = UDim.new(0, Config.Scale * 5)
+
+    BlackFrame.Name = Library:RandomString()
+    BlackFrame.Parent = LoaderGui
+    BlackFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    BlackFrame.BackgroundTransparency = 1
+    BlackFrame.BorderColor3 = Color3.fromRGB(0, 0, 0)
+    BlackFrame.BorderSizePixel = 0
+    BlackFrame.Size = UDim2.new(1, 0, 1, 0)
+
+    Blur.Size = 0
+    Blur.Parent = Lighting
+
+    Library:Tween(Blur, 1, { Size = 60 })
+    Library:Tween(BlackFrame, 0.5, { BackgroundTransparency = 0.7 }):Completed:Wait()
+
+    task.wait(0.5)
+
+    local UText = { Y = 14 }
+
+    local function createText(TEXT)
+        local LIT = Instance.new("Frame")
+        local ASCII = Instance.new("TextLabel")
+        local UIGradient = Instance.new("UIGradient")
+        local UIScale = Instance.new("UIScale")
+
+        LIT.Name = Library:RandomString()
+        LIT.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        LIT.BackgroundTransparency = 1
+        LIT.BorderColor3 = Color3.fromRGB(0, 0, 0)
+        LIT.BorderSizePixel = 0
+        LIT.Size = UDim2.new(0, 56, 0, 100)
+        LIT.ZIndex = 8
+
+        ASCII.Name = Library:RandomString()
+        ASCII.Parent = LIT
+        ASCII.AnchorPoint = Vector2.new(0.5, 0.5)
+        ASCII.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        ASCII.BackgroundTransparency = 1
+        ASCII.BorderColor3 = Color3.fromRGB(0, 0, 0)
+        ASCII.BorderSizePixel = 0
+        ASCII.Position = UDim2.new(0.5, 0, 0.5, 0)
+        ASCII.Size = UDim2.new(0, 28, 0, 50)
+        ASCII.ZIndex = 8
+        ASCII.Font = Enum.Font.GothamBold
+        ASCII.Text = TEXT
+        ASCII.TextColor3 = Color3.fromRGB(255, 255, 255)
+        ASCII.TextSize = 50
+        ASCII.TextWrapped = true
+
+        local textsize = Library:GetTextBounds(ASCII.Text, ASCII.Font, ASCII.TextSize)
+
+        ASCII.Size = UDim2.new(0, textsize.X + 100, 0, 50)
+        LIT.Size = UDim2.new(0, (textsize.X * 2.5) + (UText[TEXT] or 0), 0, 100)
+
+        UIGradient.Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(71, 119, 182)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(40, 70, 120))
+        })
+        UIGradient.Rotation = 88
+        UIGradient.Parent = ASCII
+
+        UIScale.Parent = ASCII
+        UIScale.Scale = Config.Scale
+
+        return LIT, ASCII
+    end
+
+    local PosText = {}
+    local IsFirst = true
+
+    string.gsub(Config.Name, ".", function(T)
+        local L, A = createText(T)
+        L.Parent = texts
+        A.TextTransparency = 1
+
+        if not IsFirst then
+            A.Position = UDim2.new(0.5, 0, 0.5, 200)
+        end
+
+        table.insert(PosText, { Frame = L, Text = A })
+        IsFirst = false
+    end)
+
+    do
+        local StartText = Instance.new("TextLabel")
+        local UIGradient = Instance.new("UIGradient")
+        local UIScale = Instance.new("UIScale")
+
+        StartText.Name = Library:RandomString()
+        StartText.Parent = LoaderGui
+        StartText.AnchorPoint = Vector2.new(0.5, 0.5)
+        StartText.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        StartText.BackgroundTransparency = 1
+        StartText.BorderColor3 = Color3.fromRGB(0, 0, 0)
+        StartText.BorderSizePixel = 0
+        StartText.Position = UDim2.new(0.5, 0, 0.5, 0)
+        StartText.Size = UDim2.new(0, 28, 0, 50)
+        StartText.ZIndex = 8
+        StartText.Font = Enum.Font.GothamBold
+        StartText.Text = Config.Name:sub(1, 1)
+        StartText.TextColor3 = Color3.fromRGB(255, 255, 255)
+        StartText.TextSize = 50
+        StartText.TextWrapped = true
+        StartText.TextTransparency = 1
+
+        local textsize = Library:GetTextBounds(StartText.Text, StartText.Font, StartText.TextSize)
+        StartText.Size = UDim2.new(0, textsize.X + 100, 0, 50)
+
+        UIGradient.Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(71, 119, 182)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(40, 70, 120))
+        })
+        UIGradient.Rotation = 88
+        UIGradient.Parent = StartText
+
+        UIScale.Parent = StartText
+        UIScale.Scale = Config.Scale * 4
+
+        Library:Tween(StartText, 0.45, { TextTransparency = 0 })
+        Library:Tween(UIScale, 0.5, { Scale = Config.Scale })
+
+        task.wait(0.45)
+
+        Library:Tween(StartText, 0.35, {
+            Position = UDim2.fromOffset(
+                PosText[1].Frame.AbsolutePosition.X + (PosText[1].Frame.AbsoluteSize.X / 2),
+                PosText[1].Frame.AbsolutePosition.Y + (PosText[1].Frame.AbsoluteSize.Y / 2) + math.abs(LoaderGui.AbsolutePosition.Y)
+            )
+        })
+
+        task.wait(0.5)
+
+        for i, v in ipairs(PosText) do
+            if i > 1 then
+                Library:Tween(v.Text, 0.65, {
+                    Position = UDim2.new(0.5, 0, 0.5, 0),
+                    TextTransparency = 0
+                })
+            end
+        end
+
+        task.wait((Config.Duration - 0.5) + 0.65)
+
+        Library:Tween(StartText, 1.5, { TextTransparency = 1 })
+
+        for i, v in ipairs(PosText) do
+            Library:Tween(v.Text, 1.5, { TextTransparency = 1 })
+        end
+
+        Library:Tween(Blur, 1.5, { Size = 0 })
+        Library:Tween(BlackFrame, 1.5, { BackgroundTransparency = 1 })
+
+        task.wait(1.65)
+
+        LoaderGui:Destroy()
+    end
+end
+
 return Library
