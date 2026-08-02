@@ -20,8 +20,6 @@ Library:Loader({
     Scale = 3,
 })
 
-task.wait(5)
-
 local ThemeManager = load('https://raw.githubusercontent.com/ziannebanoragy/ONYXENHANCEMENTS/main/ThemeManager.lua', 'ThemeManager')
 local SaveManager = load('https://raw.githubusercontent.com/ziannebanoragy/ONYXENHANCEMENTS/main/Settings.lua', 'Settings')
 
