@@ -329,96 +329,42 @@ do
     OnyxLogoHolder.Name = "Holder"
     OnyxLogoHolder.AnchorPoint = Vector2.new(0.5, 0.5)
     OnyxLogoHolder.Position = UDim2.fromScale(0.5, 0.5)
-    OnyxLogoHolder.Size = UDim2.fromOffset(600, 600)
+    OnyxLogoHolder.Size = UDim2.fromOffset(300, 300)
     OnyxLogoHolder.BackgroundTransparency = 1
     OnyxLogoHolder.BorderSizePixel = 0
     OnyxLogoHolder.ZIndex = 2
+    OnyxLogoHolder.ClipsDescendants = true
     OnyxLogoHolder.Active = false
     OnyxLogoHolder.Visible = false
     OnyxLogoHolder.Parent = backdropGui
 
-    local OnyxLogoViewport = Instance.new("ViewportFrame")
-    OnyxLogoViewport.Name = "Viewport"
-    OnyxLogoViewport.Size = UDim2.fromScale(1, 1)
-    OnyxLogoViewport.BackgroundTransparency = 1
-    OnyxLogoViewport.BorderSizePixel = 0
-    OnyxLogoViewport.ZIndex = 1
-    OnyxLogoViewport.Parent = OnyxLogoHolder
-
-    local OnyxLogoCamera = Instance.new("Camera")
-    OnyxLogoCamera.Parent = OnyxLogoViewport
-    OnyxLogoViewport.CurrentCamera = OnyxLogoCamera
-
-    local OnyxLogoModel
-    local OnyxLogoOriginalSizes = {}
-    local okLogo, logoObjs = pcall(function()
-        return game:GetObjects("rbxassetid://115186468080876")
-    end)
-    if okLogo and logoObjs and logoObjs[1] then
-        OnyxLogoModel = logoObjs[1]
-        OnyxLogoModel.Name = "Model"
-        if not OnyxLogoModel.PrimaryPart then
-            OnyxLogoModel.PrimaryPart = OnyxLogoModel:FindFirstChildWhichIsA("BasePart")
-        end
-        for _, d in ipairs(OnyxLogoModel:GetDescendants()) do
-            if d:IsA("BasePart") then
-                d.Anchored = true
-                d.CanCollide = false
-                d.Material = Enum.Material.Neon
-            end
-        end
-        local _, bbSize = OnyxLogoModel:GetBoundingBox()
-        local maxExtent = math.max(bbSize.X, bbSize.Y, bbSize.Z)
-        if maxExtent > 0 then
-            OnyxLogoModel:ScaleTo(6 / maxExtent)
-        end
-        for _, d in ipairs(OnyxLogoModel:GetDescendants()) do
-            if d:IsA("BasePart") then
-                OnyxLogoOriginalSizes[d] = d.Size
-            end
-        end
-        OnyxLogoModel.Parent = OnyxLogoViewport
-    end
-
-    local OnyxLogoOrbitDistance = 15
-    if OnyxLogoModel then
-        local _, finalSize = OnyxLogoModel:GetBoundingBox()
-        OnyxLogoOrbitDistance = math.max(finalSize.X, finalSize.Y, finalSize.Z) * 2.2
-    end
+    local OnyxLogoImage = Instance.new("ImageLabel")
+    OnyxLogoImage.Name = "LogoImage"
+    OnyxLogoImage.AnchorPoint = Vector2.new(0.5, 0.5)
+    OnyxLogoImage.Position = UDim2.fromScale(0.5, 0.5)
+    OnyxLogoImage.Size = UDim2.fromOffset(420, 420)
+    OnyxLogoImage.BackgroundTransparency = 1
+    OnyxLogoImage.BorderSizePixel = 0
+    OnyxLogoImage.ScaleType = Enum.ScaleType.Fit
+    OnyxLogoImage.Image = "rbxassetid://90847880602117"
+    OnyxLogoImage.ImageColor3 = Color3.new(1, 1, 1)
+    OnyxLogoImage.ZIndex = 3
+    OnyxLogoImage.Parent = OnyxLogoHolder
 
     Library.OnyxLogoFrame = OnyxLogoHolder
-    Library.OnyxLogoViewport = OnyxLogoViewport
-    Library.OnyxLogoCamera = OnyxLogoCamera
-    Library.OnyxLogoModel = OnyxLogoModel
-    Library.OnyxLogoOriginalSizes = OnyxLogoOriginalSizes
-    Library.OnyxLogoOrbitDistance = OnyxLogoOrbitDistance
+    Library.OnyxLogoImage = OnyxLogoImage
 
-    if OnyxLogoModel then
-        local center = OnyxLogoModel:GetPivot().Position
-        local dist = OnyxLogoOrbitDistance
-        OnyxLogoCamera.CFrame = CFrame.new(
-            center + Vector3.new(math.sin(0) * dist, dist * 0.3, math.cos(0) * dist),
-            center
-        )
-
-        task.spawn(function()
-            local angle = 0
-            local currentCFrame = OnyxLogoCamera.CFrame
-            while OnyxLogoModel and OnyxLogoModel.Parent do
-                local dt = RunService.RenderStepped:Wait()
-                if Library.OnyxLogoFrame and Library.OnyxLogoFrame.Visible then
-                    angle = angle + math.rad(90) * (Library.OnyxLogoSpeed or 0.5) * dt
-                    local d = Library.OnyxLogoOrbitDistance or 15
-                    local targetCFrame = CFrame.new(
-                        center + Vector3.new(math.sin(angle) * d, d * 0.3, math.cos(angle) * d),
-                        center
-                    )
-                    currentCFrame = currentCFrame:Lerp(targetCFrame, 1 - math.exp(-12 * dt))
-                    Library.OnyxLogoCamera.CFrame = currentCFrame
-                end
+    task.spawn(function()
+        local rotation = 0
+        while true do
+            local dt = RunService.RenderStepped:Wait()
+            if Library.OnyxLogoFrame and Library.OnyxLogoFrame.Visible then
+                rotation = rotation + (Library.OnyxLogoSpeed or 0.5) * dt * 360
+                if rotation > 360 then rotation = rotation - 360 end
+                OnyxLogoImage.Rotation = rotation
             end
-        end)
-    end
+        end
+    end)
 end
 
 if RunService:IsStudio() then
@@ -5658,9 +5604,8 @@ function Library:SetOnyxLogoSpeed(value)
 end
 
 function Library:SetOnyxLogoTransparency(alpha)
-    if not Library.OnyxLogoModel then return end
-    for _, d in ipairs(Library.OnyxLogoModel:GetDescendants()) do
-        if d:IsA("BasePart") then d.Transparency = alpha end
+    if Library.OnyxLogoImage then
+        Library.OnyxLogoImage.ImageTransparency = alpha
     end
 end
 
@@ -5670,33 +5615,11 @@ end
 
 function Library:SetOnyxLogoSize(size)
     if Library.OnyxLogoFrame then Library.OnyxLogoFrame.Size = UDim2.fromOffset(size, size) end
+    if Library.OnyxLogoImage then Library.OnyxLogoImage.Size = UDim2.fromOffset(size + 120, size + 120) end
 end
 
 function Library:SetOnyxLogoColor(color)
-    if not Library.OnyxLogoModel then return end
-    for _, d in ipairs(Library.OnyxLogoModel:GetDescendants()) do
-        if d:IsA("BasePart") then d.Color = color end
-    end
-end
-
-function Library:SetOnyxLogoFatness(percent)
-    if not Library.OnyxLogoModel or not Library.OnyxLogoOriginalSizes then return end
-    local ratio = (percent / 100) * 0.6
-    for d, origSize in pairs(Library.OnyxLogoOriginalSizes) do
-        if d.Parent then
-            local widest = math.max(origSize.X, origSize.Y)
-            local targetZ = ratio > 0 and (widest * ratio) or origSize.Z
-            d.Size = Vector3.new(origSize.X, origSize.Y, targetZ)
-        end
-    end
-end
-
-function Library:SetOnyxLogoMaterial(materialName)
-    if not Library.OnyxLogoModel then return end
-    local mat = Enum.Material[materialName] or Enum.Material.Plastic
-    for _, d in ipairs(Library.OnyxLogoModel:GetDescendants()) do
-        if d:IsA("BasePart") then d.Material = mat end
-    end
+    if Library.OnyxLogoImage then Library.OnyxLogoImage.ImageColor3 = color end
 end
 
 function Library:SetOnyxLogoVisible(visible)
