@@ -5628,7 +5628,7 @@ function Library:Loader(Config)
                 ASCII.Size = UDim2.new(0, textsizeX + 100, 0, 50)
                 LIT.Size = UDim2.new(0, (textsizeX * 2.5) + (UText[TEXT] or 0), 0, 100)
 
-                UIGradient.Color = ColorSequence.new(ColorSequenceKeypoint.new(0, Color3.fromRGB(71, 119, 182)), ColorSequenceKeypoint.new(1, Color3.fromRGB(40, 70, 120)))
+                UIGradient.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromRGB(71, 119, 182)), ColorSequenceKeypoint.new(1, Color3.fromRGB(40, 70, 120))})
                 UIGradient.Rotation = 88
                 UIGradient.Parent = ASCII
 
