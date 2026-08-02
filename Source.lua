@@ -5188,6 +5188,13 @@ function Library:CreateWindow(...)
                 CursorOutline:Remove();
             end);
         end;
+        if not Library.Toggled and Library.FloatingPanels then
+            for _, panel in next, Library.FloatingPanels do
+                if panel.Frame then
+                    panel.Frame.Visible = false
+                end
+            end
+        end
         if Library.UseBlur then
             if Library.Toggled then
                 Library.BlurEffect.Enabled = true
@@ -5476,11 +5483,6 @@ function Library:CreateFloatingPanel(config)
     })
     Library:MakeDraggable(outer, 25, true)
 
-    local outerCorner = Library:Create("UICorner", {
-        CornerRadius = UDim.new(0, 8),
-        Parent = outer,
-    })
-
     local inner = Library:Create("Frame", {
         Name                = "Inner",
         BackgroundColor3    = Library.MainColor,
@@ -5493,48 +5495,18 @@ function Library:CreateFloatingPanel(config)
     })
     Library:AddToRegistry(inner, {BackgroundColor3="MainColor", BorderColor3="OutlineColor"})
 
-    local innerCorner = Library:Create("UICorner", {
-        CornerRadius = UDim.new(0, 7),
-        Parent = inner,
-    })
-
-    local titleBar = Library:Create("Frame", {
-        Size              = UDim2.new(1, 0, 0, 25),
-        BackgroundColor3  = Library.AccentColor,
-        BorderSizePixel   = 0,
-        ZIndex            = 102,
-        Parent            = inner,
-    })
-    Library:AddToRegistry(titleBar, {BackgroundColor3="AccentColor"})
-
-    local titleCorner = Library:Create("UICorner", {
-        CornerRadius = UDim.new(0, 7),
-        Parent = titleBar,
-    })
-
-    local titleCover = Library:Create("Frame", {
-        Position          = UDim2.new(0, 0, 1, -7),
-        Size              = UDim2.new(1, 0, 0, 7),
-        BackgroundColor3  = Library.AccentColor,
-        BorderSizePixel   = 0,
-        ZIndex            = 102,
-        Parent            = titleBar,
-    })
-    Library:AddToRegistry(titleCover, {BackgroundColor3="AccentColor"})
-
     Library:CreateLabel({
-        Position        = UDim2.new(0, 10, 0, 0),
-        Size            = UDim2.new(1, -36, 1, 0),
+        Position        = UDim2.new(0, 0, 0, 0),
+        Size            = UDim2.new(1, 0, 0, 25),
         Text            = config.Title or "Panel",
-        TextXAlignment  = Enum.TextXAlignment.Left,
-        TextSize        = 13,
-        ZIndex          = 103,
-        Parent          = titleBar,
+        TextXAlignment  = Enum.TextXAlignment.Center,
+        ZIndex          = 102,
+        Parent          = inner,
     })
 
     local closeBtn = Library:Create("TextButton", {
-        AnchorPoint       = Vector2.new(1, 0.5),
-        Position          = UDim2.new(1, -6, 0.5, 0),
+        AnchorPoint       = Vector2.new(1, 0),
+        Position          = UDim2.new(1, -5, 0, 5),
         Size              = UDim2.new(0, 18, 0, 18),
         BackgroundColor3  = Library.RiskColor,
         BorderSizePixel   = 0,
@@ -5543,14 +5515,9 @@ function Library:CreateFloatingPanel(config)
         TextSize          = 12,
         Font              = Library.Font,
         ZIndex            = 103,
-        Parent            = titleBar,
+        Parent            = inner,
     })
     Library:AddToRegistry(closeBtn, {BackgroundColor3="RiskColor", TextColor3="FontColor"})
-
-    local closeCorner = Library:Create("UICorner", {
-        CornerRadius = UDim.new(0, 4),
-        Parent = closeBtn,
-    })
 
     closeBtn.MouseButton1Click:Connect(function()
         outer.Visible = false
@@ -5587,7 +5554,18 @@ function Library:CreateFloatingPanel(config)
     function panel:Show() outer.Visible = true end
     function panel:Hide() outer.Visible = false end
     function panel:Toggle() outer.Visible = not outer.Visible end
-    function panel:Destroy() outer:Destroy() end
+    function panel:Destroy()
+        outer:Destroy()
+        if Library.FloatingPanels then
+            for i = #Library.FloatingPanels, 1, -1 do
+                if Library.FloatingPanels[i] == panel then
+                    table.remove(Library.FloatingPanels, i)
+                end
+            end
+        end
+    end
+    if not Library.FloatingPanels then Library.FloatingPanels = {} end
+    table.insert(Library.FloatingPanels, panel)
     return panel
 end
 
