@@ -92,6 +92,123 @@ ModalElement.Text = ""
 ModalElement.ZIndex = -999
 ModalElement.Parent = ScreenGui
 
+Library.OnyxLogoOn = true
+Library.OnyxLogoSpeed = 0.5
+
+do
+    local backdropGui = Instance.new("ScreenGui")
+    backdropGui.Name = "OnyxBackdrop"
+    backdropGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
+    backdropGui.DisplayOrder = 998
+    backdropGui.ResetOnSpawn = false
+    pcall(ProtectGui, backdropGui)
+    backdropGui.Parent = (gethui and gethui()) or CoreGui
+
+    local Backdrop = Instance.new("Frame")
+    Backdrop.Name = "Overlay"
+    Backdrop.Size = UDim2.fromScale(1, 1)
+    Backdrop.Position = UDim2.fromScale(0, 0)
+    Backdrop.BackgroundColor3 = Color3.new(0, 0, 0)
+    Backdrop.BackgroundTransparency = 0.9
+    Backdrop.BorderSizePixel = 0
+    Backdrop.ZIndex = 2147483647
+    Backdrop.Visible = false
+    Backdrop.Parent = backdropGui
+    Library.Backdrop = Backdrop
+
+    local OnyxLogoHolder = Instance.new("Frame")
+    OnyxLogoHolder.Name = "Holder"
+    OnyxLogoHolder.AnchorPoint = Vector2.new(0.5, 0.5)
+    OnyxLogoHolder.Position = UDim2.fromScale(0.5, 0.5)
+    OnyxLogoHolder.Size = UDim2.fromOffset(600, 600)
+    OnyxLogoHolder.BackgroundTransparency = 1
+    OnyxLogoHolder.BorderSizePixel = 0
+    OnyxLogoHolder.ZIndex = 2147483647
+    OnyxLogoHolder.Visible = false
+    OnyxLogoHolder.Parent = backdropGui
+
+    local OnyxLogoViewport = Instance.new("ViewportFrame")
+    OnyxLogoViewport.Name = "Viewport"
+    OnyxLogoViewport.Size = UDim2.fromScale(1, 1)
+    OnyxLogoViewport.BackgroundTransparency = 1
+    OnyxLogoViewport.BorderSizePixel = 0
+    OnyxLogoViewport.ZIndex = 1
+    OnyxLogoViewport.Parent = OnyxLogoHolder
+
+    local OnyxLogoCamera = Instance.new("Camera")
+    OnyxLogoCamera.Parent = OnyxLogoViewport
+    OnyxLogoViewport.CurrentCamera = OnyxLogoCamera
+
+    local OnyxLogoModel
+    local OnyxLogoOriginalSizes = {}
+    local okLogo, logoObjs = pcall(function()
+        return game:GetObjects("rbxassetid://115186468080876")
+    end)
+    if okLogo and logoObjs and logoObjs[1] then
+        OnyxLogoModel = logoObjs[1]
+        OnyxLogoModel.Name = "Model"
+        if not OnyxLogoModel.PrimaryPart then
+            OnyxLogoModel.PrimaryPart = OnyxLogoModel:FindFirstChildWhichIsA("BasePart")
+        end
+        for _, d in ipairs(OnyxLogoModel:GetDescendants()) do
+            if d:IsA("BasePart") then
+                d.Anchored = true
+                d.CanCollide = false
+                d.Material = Enum.Material.Neon
+            end
+        end
+        local _, bbSize = OnyxLogoModel:GetBoundingBox()
+        local maxExtent = math.max(bbSize.X, bbSize.Y, bbSize.Z)
+        if maxExtent > 0 then
+            OnyxLogoModel:ScaleTo(6 / maxExtent)
+        end
+        for _, d in ipairs(OnyxLogoModel:GetDescendants()) do
+            if d:IsA("BasePart") then
+                OnyxLogoOriginalSizes[d] = d.Size
+            end
+        end
+        OnyxLogoModel.Parent = OnyxLogoViewport
+    end
+
+    local OnyxLogoOrbitDistance = 15
+    if OnyxLogoModel then
+        local _, finalSize = OnyxLogoModel:GetBoundingBox()
+        OnyxLogoOrbitDistance = math.max(finalSize.X, finalSize.Y, finalSize.Z) * 2.2
+    end
+
+    Library.OnyxLogoFrame = OnyxLogoHolder
+    Library.OnyxLogoViewport = OnyxLogoViewport
+    Library.OnyxLogoCamera = OnyxLogoCamera
+    Library.OnyxLogoModel = OnyxLogoModel
+    Library.OnyxLogoOriginalSizes = OnyxLogoOriginalSizes
+    Library.OnyxLogoOrbitDistance = OnyxLogoOrbitDistance
+
+    if OnyxLogoModel then
+        task.spawn(function()
+            local angle = 0
+            local currentCFrame
+            local center = OnyxLogoModel:GetPivot().Position
+            while OnyxLogoModel and OnyxLogoModel.Parent do
+                local dt = RunService.RenderStepped:Wait()
+                if Library.OnyxLogoFrame and Library.OnyxLogoFrame.Visible then
+                    angle = angle + math.rad(90) * (Library.OnyxLogoSpeed or 0.5) * dt
+                    local dist = Library.OnyxLogoOrbitDistance or 15
+                    local targetCFrame = CFrame.new(
+                        center + Vector3.new(math.sin(angle) * dist, dist * 0.3, math.cos(angle) * dist),
+                        center
+                    )
+                    if not currentCFrame then
+                        currentCFrame = targetCFrame
+                    else
+                        currentCFrame = currentCFrame:Lerp(targetCFrame, 1 - math.exp(-12 * dt))
+                    end
+                    Library.OnyxLogoCamera.CFrame = currentCFrame
+                end
+            end
+        end)
+    end
+end
+
 local Toggles = {}
 local Options = {}
 local Labels = {}
@@ -5200,6 +5317,12 @@ function Library:CreateWindow(...)
             Library.BlurEffect.Size = 0
             Library.BlurEffect.Enabled = false
         end
+        if Library.Backdrop then
+            Library.Backdrop.Visible = Library.Toggled
+        end
+        if Library.OnyxLogoFrame then
+            Library.OnyxLogoFrame.Visible = Library.Toggled and Library.OnyxLogoOn
+        end
     end
 
     Library:GiveSignal(InputService.InputBegan:Connect(function(Input, Processed)
@@ -5459,4 +5582,123 @@ if InputService.TouchEnabled then
 end
 
 getgenv().Library = Library
+
+function Library:CreateFloatingPanel(config)
+    local w = config.Width or 860
+    local h = config.Height or 520
+    local outer = Library:Create("Frame", {
+        AnchorPoint       = Vector2.new(0.5, 0.5),
+        Position          = config.Position or UDim2.fromScale(0.5, 0.5),
+        Size              = UDim2.fromOffset(w, h),
+        BackgroundColor3  = Library.MainColor,
+        BorderColor3      = Library.OutlineColor,
+        Visible           = false,
+        ZIndex            = 100,
+        Parent            = Library.ScreenGui,
+    })
+    Library:AddToRegistry(outer, {BackgroundColor3="MainColor", BorderColor3="OutlineColor"})
+    Library:MakeDraggable(outer, 22)
+    local titleBar = Library:Create("Frame", {
+        Size              = UDim2.new(1, 0, 0, 22),
+        BackgroundColor3  = Library.AccentColor,
+        BorderSizePixel   = 0,
+        ZIndex            = 101,
+        Parent            = outer,
+    })
+    Library:AddToRegistry(titleBar, {BackgroundColor3="AccentColor"})
+    Library:CreateLabel({
+        Position        = UDim2.new(0, 5, 0, 0),
+        Size            = UDim2.new(1, -26, 1, 0),
+        Text            = config.Title or "panel",
+        TextXAlignment  = Enum.TextXAlignment.Left,
+        TextSize        = 14,
+        ZIndex          = 102,
+        Parent          = titleBar,
+    })
+    local closeBtn = Library:Create("TextButton", {
+        AnchorPoint       = Vector2.new(1, 0.5),
+        Position          = UDim2.new(1, -3, 0.5, 0),
+        Size              = UDim2.new(0, 18, 0, 18),
+        BackgroundColor3  = Library.RiskColor,
+        BorderSizePixel   = 0,
+        Text              = "x",
+        TextColor3        = Library.FontColor,
+        TextSize          = 12,
+        Font              = Library.Font,
+        ZIndex            = 102,
+        Parent            = titleBar,
+    })
+    Library:AddToRegistry(closeBtn, {BackgroundColor3="RiskColor", TextColor3="FontColor"})
+    closeBtn.MouseButton1Click:Connect(function()
+        outer.Visible = false
+        if config.OnClose then config.OnClose() end
+    end)
+    local content = Library:Create("Frame", {
+        Position                = UDim2.new(0, 0, 0, 22),
+        Size                    = UDim2.new(1, 0, 1, -22),
+        BackgroundTransparency  = 1,
+        ZIndex                  = 101,
+        Parent                  = outer,
+    })
+    local panel = {Frame = outer, Content = content}
+    function panel:Show() outer.Visible = true end
+    function panel:Hide() outer.Visible = false end
+    function panel:Toggle() outer.Visible = not outer.Visible end
+    function panel:Destroy() outer:Destroy() end
+    return panel
+end
+
+function Library:SetOnyxLogoSpeed(value)
+    Library.OnyxLogoSpeed = value
+end
+
+function Library:SetOnyxLogoTransparency(alpha)
+    if not Library.OnyxLogoModel then return end
+    for _, d in ipairs(Library.OnyxLogoModel:GetDescendants()) do
+        if d:IsA("BasePart") then d.Transparency = alpha end
+    end
+end
+
+function Library:SetOnyxLogoPosition(x, y)
+    if Library.OnyxLogoFrame then Library.OnyxLogoFrame.Position = UDim2.fromScale(x, y) end
+end
+
+function Library:SetOnyxLogoSize(size)
+    if Library.OnyxLogoFrame then Library.OnyxLogoFrame.Size = UDim2.fromOffset(size, size) end
+end
+
+function Library:SetOnyxLogoColor(color)
+    if not Library.OnyxLogoModel then return end
+    for _, d in ipairs(Library.OnyxLogoModel:GetDescendants()) do
+        if d:IsA("BasePart") then d.Color = color end
+    end
+end
+
+function Library:SetOnyxLogoFatness(percent)
+    if not Library.OnyxLogoModel or not Library.OnyxLogoOriginalSizes then return end
+    local ratio = (percent / 100) * 0.6
+    for d, origSize in pairs(Library.OnyxLogoOriginalSizes) do
+        if d.Parent then
+            local widest = math.max(origSize.X, origSize.Y)
+            local targetZ = ratio > 0 and (widest * ratio) or origSize.Z
+            d.Size = Vector3.new(origSize.X, origSize.Y, targetZ)
+        end
+    end
+end
+
+function Library:SetOnyxLogoMaterial(materialName)
+    if not Library.OnyxLogoModel then return end
+    local mat = Enum.Material[materialName] or Enum.Material.Plastic
+    for _, d in ipairs(Library.OnyxLogoModel:GetDescendants()) do
+        if d:IsA("BasePart") then d.Material = mat end
+    end
+end
+
+function Library:SetOnyxLogoVisible(visible)
+    Library.OnyxLogoOn = visible
+    if Library.OnyxLogoFrame then
+        Library.OnyxLogoFrame.Visible = Library.Toggled and visible
+    end
+end
+
 return Library
