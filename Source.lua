@@ -5595,7 +5595,8 @@ function Library:Loader(Config)
     Blur.Parent = Lighting
 
     Library:Tween(Blur, 1, { Size = 60 })
-    Library:Tween(BlackFrame, 0.5, { BackgroundTransparency = 0.7 }):Completed:Wait()
+    local blackTween = Library:Tween(BlackFrame, 0.5, { BackgroundTransparency = 0.7 })
+    blackTween.Completed:Wait()
 
     task.wait(0.5)
 
