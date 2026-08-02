@@ -299,74 +299,6 @@ local Library = {
     ImageManager = CustomImageManager;
 };
 
-Library.OnyxLogoOn = true
-Library.OnyxLogoSpeed = 0.5
-
-do
-    local backdropGui = Instance.new("ScreenGui")
-    backdropGui.Name = "OnyxBackdrop"
-    backdropGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
-    backdropGui.DisplayOrder = 1001
-    backdropGui.ResetOnSpawn = false
-    backdropGui.IgnoreGuiInset = true
-    pcall(ProtectGui, backdropGui)
-    backdropGui.Parent = (gethui and gethui()) or CoreGui
-
-    local Backdrop = Instance.new("TextButton")
-    Backdrop.Name = "Overlay"
-    Backdrop.Size = UDim2.fromScale(1, 1)
-    Backdrop.Position = UDim2.fromScale(0, 0)
-    Backdrop.BackgroundColor3 = Color3.new(0, 0, 0)
-    Backdrop.BackgroundTransparency = 1
-    Backdrop.BorderSizePixel = 0
-    Backdrop.Text = ""
-    Backdrop.ZIndex = 1
-    Backdrop.Visible = false
-    Backdrop.Parent = backdropGui
-    Library.Backdrop = Backdrop
-
-    local OnyxLogoHolder = Instance.new("Frame")
-    OnyxLogoHolder.Name = "Holder"
-    OnyxLogoHolder.AnchorPoint = Vector2.new(0.5, 0.5)
-    OnyxLogoHolder.Position = UDim2.fromScale(0.5, 0.5)
-    OnyxLogoHolder.Size = UDim2.fromOffset(300, 300)
-    OnyxLogoHolder.BackgroundTransparency = 1
-    OnyxLogoHolder.BorderSizePixel = 0
-    OnyxLogoHolder.ZIndex = 2
-    OnyxLogoHolder.ClipsDescendants = true
-    OnyxLogoHolder.Active = false
-    OnyxLogoHolder.Visible = false
-    OnyxLogoHolder.Parent = backdropGui
-
-    local OnyxLogoImage = Instance.new("ImageLabel")
-    OnyxLogoImage.Name = "LogoImage"
-    OnyxLogoImage.AnchorPoint = Vector2.new(0.5, 0.5)
-    OnyxLogoImage.Position = UDim2.fromScale(0.5, 0.5)
-    OnyxLogoImage.Size = UDim2.fromOffset(420, 420)
-    OnyxLogoImage.BackgroundTransparency = 1
-    OnyxLogoImage.BorderSizePixel = 0
-    OnyxLogoImage.ScaleType = Enum.ScaleType.Fit
-    OnyxLogoImage.Image = "rbxassetid://90847880602117"
-    OnyxLogoImage.ImageColor3 = Color3.new(1, 1, 1)
-    OnyxLogoImage.ZIndex = 3
-    OnyxLogoImage.Parent = OnyxLogoHolder
-
-    Library.OnyxLogoFrame = OnyxLogoHolder
-    Library.OnyxLogoImage = OnyxLogoImage
-
-    task.spawn(function()
-        local rotation = 0
-        while true do
-            local dt = RunService.RenderStepped:Wait()
-            if Library.OnyxLogoFrame and Library.OnyxLogoFrame.Visible then
-                rotation = rotation + (Library.OnyxLogoSpeed or 0.5) * dt * 360
-                if rotation > 360 then rotation = rotation - 360 end
-                OnyxLogoImage.Rotation = rotation
-            end
-        end
-    end)
-end
-
 if RunService:IsStudio() then
    Library.IsMobile = InputService.TouchEnabled and not InputService.MouseEnabled 
 else
@@ -5268,12 +5200,6 @@ function Library:CreateWindow(...)
             Library.BlurEffect.Size = 0
             Library.BlurEffect.Enabled = false
         end
-        if Library.Backdrop then
-            Library.Backdrop.Visible = Library.Toggled
-        end
-        if Library.OnyxLogoFrame then
-            Library.OnyxLogoFrame.Visible = Library.Toggled and Library.OnyxLogoOn
-        end
     end
 
     Library:GiveSignal(InputService.InputBegan:Connect(function(Input, Processed)
@@ -5597,36 +5523,6 @@ function Library:CreateFloatingPanel(config)
     function panel:Toggle() outer.Visible = not outer.Visible end
     function panel:Destroy() outer:Destroy() end
     return panel
-end
-
-function Library:SetOnyxLogoSpeed(value)
-    Library.OnyxLogoSpeed = value
-end
-
-function Library:SetOnyxLogoTransparency(alpha)
-    if Library.OnyxLogoImage then
-        Library.OnyxLogoImage.ImageTransparency = alpha
-    end
-end
-
-function Library:SetOnyxLogoPosition(x, y)
-    if Library.OnyxLogoFrame then Library.OnyxLogoFrame.Position = UDim2.fromScale(x, y) end
-end
-
-function Library:SetOnyxLogoSize(size)
-    if Library.OnyxLogoFrame then Library.OnyxLogoFrame.Size = UDim2.fromOffset(size, size) end
-    if Library.OnyxLogoImage then Library.OnyxLogoImage.Size = UDim2.fromOffset(size + 120, size + 120) end
-end
-
-function Library:SetOnyxLogoColor(color)
-    if Library.OnyxLogoImage then Library.OnyxLogoImage.ImageColor3 = color end
-end
-
-function Library:SetOnyxLogoVisible(visible)
-    Library.OnyxLogoOn = visible
-    if Library.OnyxLogoFrame then
-        Library.OnyxLogoFrame.Visible = Library.Toggled and visible
-    end
 end
 
 return Library
