@@ -1,4 +1,4 @@
-local cloneref = (cloneref or clonereference or function(instance)
+\local cloneref = (cloneref or clonereference or function(instance)
 	return instance
 end)
 
