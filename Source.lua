@@ -1,4 +1,4 @@
-\local cloneref = (cloneref or clonereference or function(instance)
+local cloneref = (cloneref or clonereference or function(instance)
 	return instance
 end)
 
@@ -5188,13 +5188,6 @@ function Library:CreateWindow(...)
                 CursorOutline:Remove();
             end);
         end;
-        if not Library.Toggled and Library.FloatingPanels then
-            for _, panel in next, Library.FloatingPanels do
-                if panel.Frame then
-                    panel.Frame.Visible = false
-                end
-            end
-        end
         if Library.UseBlur then
             if Library.Toggled then
                 Library.BlurEffect.Enabled = true
@@ -5466,117 +5459,6 @@ if InputService.TouchEnabled then
 end
 
 getgenv().Library = Library
-
-function Library:CreateFloatingPanel(config)
-    local w = config.Width or 860
-    local h = config.Height or 520
-
-    local outer = Library:Create("Frame", {
-        AnchorPoint       = Vector2.new(0.5, 0.5),
-        Position          = config.Position or UDim2.fromScale(0.5, 0.5),
-        Size              = UDim2.fromOffset(w, h),
-        BackgroundColor3  = Color3.new(0, 0, 0),
-        BorderSizePixel   = 0,
-        Visible           = false,
-        ZIndex            = 100,
-        Parent            = Library.ScreenGui,
-    })
-    Library:MakeDraggable(outer, 25, true)
-
-    local inner = Library:Create("Frame", {
-        Name                = "Inner",
-        BackgroundColor3    = Library.MainColor,
-        BorderColor3        = Library.OutlineColor,
-        BorderMode          = Enum.BorderMode.Inset,
-        Position            = UDim2.new(0, 1, 0, 1),
-        Size                = UDim2.new(1, -2, 1, -2),
-        ZIndex              = 101,
-        Parent              = outer,
-    })
-    Library:AddToRegistry(inner, {BackgroundColor3="MainColor", BorderColor3="OutlineColor"})
-
-    local accentLine = Library:Create("Frame", {
-        BackgroundColor3  = Library.AccentColor,
-        BorderSizePixel   = 0,
-        Size              = UDim2.new(1, 0, 0, 2),
-        ZIndex            = 102,
-        Parent            = inner,
-    })
-    Library:AddToRegistry(accentLine, {BackgroundColor3="AccentColor"})
-
-    Library:CreateLabel({
-        Position        = UDim2.new(0, 0, 0, 0),
-        Size            = UDim2.new(1, 0, 0, 25),
-        Text            = config.Title or "Panel",
-        TextXAlignment  = Enum.TextXAlignment.Center,
-        ZIndex          = 102,
-        Parent          = inner,
-    })
-
-    local closeBtn = Library:Create("TextButton", {
-        AnchorPoint       = Vector2.new(1, 0),
-        Position          = UDim2.new(1, -5, 0, 5),
-        Size              = UDim2.new(0, 18, 0, 18),
-        BackgroundColor3  = Library.RiskColor,
-        BorderSizePixel   = 0,
-        Text              = "x",
-        TextColor3        = Library.FontColor,
-        TextSize          = 12,
-        Font              = Library.Font,
-        ZIndex            = 103,
-        Parent            = inner,
-    })
-    Library:AddToRegistry(closeBtn, {BackgroundColor3="RiskColor", TextColor3="FontColor"})
-
-    closeBtn.MouseButton1Click:Connect(function()
-        outer.Visible = false
-        if config.OnClose then config.OnClose() end
-    end)
-
-    local content = Library:Create("ScrollingFrame", {
-        Position                = UDim2.new(0, 8, 0, 33),
-        Size                    = UDim2.new(1, -16, 1, -41),
-        BackgroundTransparency  = 1,
-        BorderSizePixel         = 0,
-        ScrollBarThickness     = 3,
-        ScrollBarImageColor3    = Library.AccentColor,
-        CanvasSize              = UDim2.new(0, 0, 0, 0),
-        AutomaticCanvasSize     = Enum.AutomaticSize.Y,
-        ZIndex                  = 102,
-        Parent                  = inner,
-    })
-    Library:AddToRegistry(content, {ScrollBarImageColor3="AccentColor"})
-
-    local contentLayout = Library:Create("UIListLayout", {
-        Padding = UDim.new(0, 4),
-        SortOrder = Enum.SortOrder.LayoutOrder,
-        Parent = content,
-    })
-
-    local contentPadding = Library:Create("UIPadding", {
-        PaddingTop = UDim.new(0, 2),
-        PaddingBottom = UDim.new(0, 2),
-        Parent = content,
-    })
-
-    local panel = {Frame = outer, Content = content}
-    function panel:Show() outer.Visible = true end
-    function panel:Hide() outer.Visible = false end
-    function panel:Toggle() outer.Visible = not outer.Visible end
-    function panel:Destroy()
-        outer:Destroy()
-        if Library.FloatingPanels then
-            for i = #Library.FloatingPanels, 1, -1 do
-                if Library.FloatingPanels[i] == panel then
-                    table.remove(Library.FloatingPanels, i)
-                end
-            end
-        end
-    end
-    if not Library.FloatingPanels then Library.FloatingPanels = {} end
-    table.insert(Library.FloatingPanels, panel)
-    return panel
-end
 
 function Library:RandomString()
     local chars = {}
