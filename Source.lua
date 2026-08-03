@@ -5495,6 +5495,15 @@ function Library:CreateFloatingPanel(config)
     })
     Library:AddToRegistry(inner, {BackgroundColor3="MainColor", BorderColor3="OutlineColor"})
 
+    local accentLine = Library:Create("Frame", {
+        BackgroundColor3  = Library.AccentColor,
+        BorderSizePixel   = 0,
+        Size              = UDim2.new(1, 0, 0, 2),
+        ZIndex            = 102,
+        Parent            = inner,
+    })
+    Library:AddToRegistry(accentLine, {BackgroundColor3="AccentColor"})
+
     Library:CreateLabel({
         Position        = UDim2.new(0, 0, 0, 0),
         Size            = UDim2.new(1, 0, 0, 25),
